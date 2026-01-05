@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Licenças Comerciais Boston (2015-2020)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="projeto2.css">
+<style>
+#map { height: 70vh; margin:20px; border-radius:8px; }
+.custom-legend {
+  background: white; border: 2px solid #ccc; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  min-width: 280px; max-height: 500px; overflow-y: auto; font-family: Arial, sans-serif;
+  font-size: 12px; padding: 10px;
+}
+.legend-year { padding: 6px 10px; background: #f0f0f0; font-weight: bold; cursor: pointer; 
+  border-bottom: 1px solid #ddd; margin-top: 5px; display: flex; align-items: center; }
+.legend-year input { margin-right: 6px; }
+.legend-content { padding-left: 20px; }
+.layer-item { padding: 4px 10px; display: flex; align-items: center; }
+.layer-color { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #999; margin-right: 6px; }
+.heatmap-section { border-top: 2px solid #FF5722; margin-top: 10px; padding-top: 10px; }
+.heatmap-toggle { background: #FF5722; color: white; margin-bottom: 8px; }
+.heatmap-legend { background: linear-gradient(to right, rgba(0,0,255,0), rgba(0,0,255,0.1), rgba(255,0,0,0.3), rgba(255,0,0,1)); 
+  height: 20px; border-radius: 3px; margin: 5px 0; border: 1px solid #999; }
+.heatmap-labels { display: flex; justify-content: space-between; font-size: 11px; margin-top: 2px; }
+
+.table-container { margin: 20px; font-family: Arial, sans-serif; }
+.table-container h3 { margin-top: 20px; margin-bottom: 5px; color: #333; }
+.table-container table { border-collapse: collapse; margin-bottom: 10px; width: 100%; }
+.table-container th, .table-container td { border: 1px solid #999; padding: 6px 10px; text-align: center; }
+.table-container th { background: #f0f0f0; }
+.summary-table th { background: #2196F3; color: white; }
+.summary-table-licencas th { background: #FF5722; color: white; }
+.summary-table-top th { background: #4CAF50; color: white; }
+.summary-table-heatmap th { background: #9C27B0; color: white; }
+.summary-table-densidade th { background: #E91E63; color: white; }
+.btn-toggle { margin: 10px 20px; padding: 8px 16px; background: #FF9800; color: white; 
+  border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.btn-toggle:hover { background: #F57C00; }
+.table-compact { font-size: 11px; }
+.table-visible { display: table !important; }
+.densidade-highlight { background: linear-gradient(90deg, 'light-pink', 'light-pink') !important; }
+</style>
+</head>
+<body>
+
+<header><h1>Currículo Vitae Pessoal</h1><p>Cartografando ideias, analisando o mundo.</p></header>
+
+<nav class="navbar">
+  <a href="inicial.html">Página Inicial</a>
+  <a href="curriculo.html">Dados Pessoais e Competências</a>
+  <a href="formacao.html">Formação Profissional</a>
+  <a href="educacao.html">Educação e Formação</a>
+  <a href="trabalhos.html">Trabalhos Desenvolvidos</a>
+  <a href="certificados.html">Certificados</a>
+  <a href="projeto2.html">Boston</a>
+  <a href="projeto3.html">Projeto 3</a>
+</nav>
+
+<div id="map"></div>
+<div class="table-container" id="tables"></div>
+
+<footer><h4>Mapear é compreender. Cada dado espacial é uma história do território à espera de ser contada!</h4></footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script>
+const map = L.map('map').setView([42.36, -71.06], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+const anos = [2015, 2016, 2017, 2018, 2019, 2020];
+const categorias = {
+  'Eating & Drinking': '#4CAF50',
+  'Eating & Drinking w/ Take Out': '#2196F3',
+  'Mobile Food Walk On': '#FF9800',
+  'Retail Food': '#9C27B0'
+};
+
+const layers = {};
+const heatLayers = {};
+anos.forEach(ano => {
+  layers[ano] = {};
+  Object.keys(categorias).forEach(cat => layers[ano][cat] = L.layerGroup().addTo(map));
+  heatLayers[ano] = null;
+});
+
+let bairrosLayer = null; // Layer dos bairros com densidade
+const legend = L.control({position:'topright'});
+legend.onAdd = function(map) {
+  const div = L.DomUtil.create('div', 'custom-legend');
+  anos.forEach(ano => {
+    const yearDiv = document.createElement('div'); yearDiv.className='legend-year';
+    const yearCheckbox = document.createElement('input'); yearCheckbox.type='checkbox'; yearCheckbox.checked=true;
+    yearCheckbox.onchange = () => {
+      Object.entries(layers[ano]).forEach(([cat, layer]) => {
+        if(yearCheckbox.checked) map.addLayer(layer); else map.removeLayer(layer);
+        const catCheckbox = div.querySelector(`#${ano}-${cat.replace(/\s+/g,'-')}`);
+        if(catCheckbox) catCheckbox.checked = yearCheckbox.checked;
+      });
+      if(heatLayers[ano]) {
+        if(yearCheckbox.checked) map.addLayer(heatLayers[ano]); 
+        else map.removeLayer(heatLayers[ano]);
+      }
+    };
+    const yearLabel = document.createElement('span'); yearLabel.textContent = ` ${ano}`;
+    yearDiv.appendChild(yearCheckbox); yearDiv.appendChild(yearLabel); div.appendChild(yearDiv);
+
+    const content = document.createElement('div'); content.className='legend-content'; content.style.display='block';
+    Object.entries(categorias).forEach(([cat, cor])=>{
+      const item = document.createElement('div'); item.className='layer-item';
+      const catCheckbox = document.createElement('input'); catCheckbox.type='checkbox'; catCheckbox.checked=true; 
+      catCheckbox.id = `${ano}-${cat.replace(/\s+/g,'-')}`;
+      catCheckbox.onchange = () => { 
+        if(catCheckbox.checked) map.addLayer(layers[ano][cat]); 
+        else map.removeLayer(layers[ano][cat]); 
+      };
+      const colorDiv = document.createElement('div'); colorDiv.className='layer-color'; colorDiv.style.background=cor;
+      const label = document.createElement('span'); label.textContent=cat;
+      item.appendChild(catCheckbox); item.appendChild(colorDiv); item.appendChild(label); content.appendChild(item);
+    });
+    div.appendChild(content);
+  });
+
+  const heatmapSection = document.createElement('div'); heatmapSection.className = 'heatmap-section';
+  const heatmapBtn = document.createElement('button'); heatmapBtn.className = 'btn-toggle heatmap-toggle'; 
+  heatmapBtn.textContent = '🌡️ Heatmap Geral';
+  heatmapBtn.onclick = () => toggleHeatmapGeral();
+  heatmapSection.appendChild(heatmapBtn);
+
+  const heatmapLegendDiv = document.createElement('div'); heatmapLegendDiv.innerHTML = `
+    <div class="heatmap-legend"></div>
+    <div class="heatmap-labels">
+      <span>Baixa Densidade</span>
+      <span>Alta Densidade</span>
+    </div>
+  `;
+  heatmapSection.appendChild(heatmapLegendDiv);
+  div.appendChild(heatmapSection);
+
+  return div;
+};
+legend.addTo(map);
+
+function pointToLayer(feature, latlng){
+  const cat = feature.properties.descript;
+  const cor = categorias[cat]||'#999';
+  const isActive = (feature.properties.licstatus||'').toLowerCase().includes('active');
+  return L.circleMarker(latlng,{ radius:isActive?4:2, fillColor:cor, color:'white', weight:1, fillOpacity:isActive?0.9:0.6 });
+}
+
+let bairrosGeoJSON = null;
+let negociosGeoJSON = [];
+let carregadosCount = 0;
+let pontosHeatmapGeral = [];
+let densidadeBairros = {}; // Cache densidade por bairro
+
+function isValidFeature(f) {
+  return f && f.geometry && f.geometry.coordinates && f.geometry.coordinates.length === 2;
+}
+
+function calcularDensidadeBairros() {
+  const bairros = bairrosGeoJSON.features;
+  const areaBairros = {};
+  
+  // Calcular áreas dos bairros
+  bairros.forEach(bairro => {
+    const nome = bairro.properties.name || bairro.properties.nome || 'N/D';
+    const area = turf.area(bairro);
+    areaBairros[nome] = area;
+    densidadeBairros[nome] = { total: 0, anos: {}, area: area, densidade: 0 };
+    anos.forEach(ano => densidadeBairros[nome].anos[ano] = 0);
+  });
+  
+  // Contar pontos por bairro e ano
+  negociosGeoJSON.forEach(n => {
+    if(!isValidFeature(n)) return;
+    try {
+      const ponto = turf.point([n.geometry.coordinates[0], n.geometry.coordinates[1]]);
+      for(let bairro of bairros) {
+        if(turf.booleanPointInPolygon(ponto, bairro)) {
+          const nome = bairro.properties.name || bairro.properties.nome || 'N/D';
+          const ano = n.properties.ano;
+          densidadeBairros[nome].anos[ano]++;
+          densidadeBairros[nome].total++;
+          break;
+        }
+      }
+    } catch(e) {
+      console.warn('Erro Turf densidade:', e);
+    }
+  });
+  
+  // Calcular densidade (pontos por km²)
+  Object.keys(densidadeBairros).forEach(nome => {
+    const dados = densidadeBairros[nome];
+    dados.densidade = dados.area > 0 ? (dados.total / (dados.area / 1000000)).toFixed(2) : 0;
+  });
+  
+  console.log('✅ Densidades calculadas:', densidadeBairros);
+}
+
+function criarHeatmap(anoFiltrado) {
+  const pontosAno = negociosGeoJSON.filter(n => n.properties.ano === anoFiltrado)
+    .map(n => [n.geometry.coordinates[1], n.geometry.coordinates[0], 1]);
+  
+  if (heatLayers[anoFiltrado]) map.removeLayer(heatLayers[anoFiltrado]);
+  heatLayers[anoFiltrado] = L.heatLayer(pontosAno, {
+    radius: 15,
+    blur: 20,
+    maxZoom: 17,
+    gradient: {0.2: '#00f', 0.5: '#0f0', 0.8: '#ff0', 1.0: '#f00'}
+  }).addTo(map);
+}
+
+let heatmapGeral = null;
+function toggleHeatmapGeral() {
+  if (heatmapGeral) {
+    map.removeLayer(heatmapGeral);
+    heatmapGeral = null;
+  } else {
+    heatmapGeral = L.heatLayer(pontosHeatmapGeral, {
+      radius: 20,
+      blur: 25,
+      maxZoom: 17,
+      gradient: {0.2: '#00f', 0.5: '#0f0', 0.8: '#ff0', 1.0: '#f00'}
+    }).addTo(map);
+  }
+}
+
+// Carregar dados
+fetch('ficheiros/bairrosboston.geojson')
+  .then(r=>r.json())
+  .then(geojson=>{
+    bairrosGeoJSON = geojson;
+    
+    // Layer inicial bairros (sem densidade ainda)
+    bairrosLayer = L.geoJSON(geojson,{ 
+      style:{color:'#FF5722',weight:2,fillColor:'#FFCCBC',fillOpacity:0.3},
+      onEachFeature: (feature,layer)=>{
+        const nomeBairro = feature.properties.name || feature.properties.nome || 'N/D';
+        layer.bindPopup(`<b>🏘️ Bairro:</b> <strong>${nomeBairro}</strong>`);
+      }
+    }).addTo(map);
+    
+    anos.forEach(ano=>{
+      fetch(`ficheiros/Boston${ano}.geojson`)
+        .then(r=>r.json())
+        .then(geojson=>{
+          const featuresValidas = geojson.features.filter(isValidFeature);
+          featuresValidas.forEach(f=> {
+            f.properties.ano = ano;
+            negociosGeoJSON.push(f);
+            pontosHeatmapGeral.push([f.geometry.coordinates[1], f.geometry.coordinates[0], 1]);
+          });
+          
+          L.geoJSON(geojson,{
+            filter: isValidFeature,
+            pointToLayer:(feature,latlng)=>{
+              const cat = feature.properties.descript;
+              const marker = pointToLayer(feature,latlng);
+              if(layers[ano][cat]) layers[ano][cat].addLayer(marker);
+              return marker;
+            },
+            onEachFeature:(feature,layer)=>layer.bindPopup(
+              `<b>🏪 ${feature.properties.businessname||feature.properties.name||'Negócio'}</b><br>
+              <span style="color:${categorias[feature.properties.descript]||'#999'}; font-weight:bold;">${
+                (feature.properties.licstatus||'N/D')} (${feature.properties.ano})</span><br>
+              📋 ${feature.properties.descript}<br>📍 ${feature.properties.address||'N/D'}`
+            )
+          });
+          
+          criarHeatmap(ano);
+          
+          carregadosCount++;
+          if(carregadosCount === anos.length) {
+            setTimeout(() => {
+              calcularDensidadeBairros(); // Calcular densidades
+              atualizarBairrosComDensidade(); // Atualizar layer visual
+              gerarResumoGeral();
+              gerarTop10Bairros();
+              gerarTabelaCompleta();
+              gerarTabelaHeatmap();
+              gerarTopDensidadeBairros(); // NOVA TABELA TOP DENSIDADE
+              gerarTabelaStatusPorAno()
+              console.log('✅ Tudo carregado + Densidade bairros!');
+            }, 200);
+          }
+        })
+        .catch(e=>console.error('Erro Boston'+ano, e));
+    });
+  })
+  .catch(e=>console.error('Erro bairros',e));
+
+function atualizarBairrosComDensidade() {
+  map.removeLayer(bairrosLayer);
+  bairrosLayer = L.geoJSON(bairrosGeoJSON, {
+    style: function(feature) {
+      const nome = feature.properties.name || feature.properties.nome || 'N/D';
+      const dens = parseFloat(densidadeBairros[nome]?.densidade || 0);
+      const intensidade = Math.min(dens / 100, 1); // Normalizar
+      const cor = intensidade > 0.7 ? '#B71C1C' : intensidade > 0.4 ? '#F57C00' : intensidade > 0.1 ? '#FF9800' : '#FFCC80';
+      return {
+        color: '#FF5722',
+        weight: 2,
+        fillColor: "#FFFFFF",
+        fillOpacity: 0
+      };
+    },
+    onEachFeature: (feature, layer) => {
+      const nome = feature.properties.name || feature.properties.nome || 'N/D';
+      const dados = densidadeBairros[nome];
+      layer.bindPopup(`
+        <b>🏘️ ${nome}</b><br>
+        📊 Total: ${dados?.total?.toLocaleString() || 0}<br>
+        🌡️ Densidade: ${dados?.densidade || 0} pts/km²<br>
+        📐 Área: ${(dados?.area / 1000000).toFixed(2)} km²<br>
+        <small>2015-2020</small>
+      `);
+    }
+  }).addTo(map);
+}
+
+// ===== TABELA TOP 10 DENSIDADE BAIRROS (NOVA) =====
+function gerarTopDensidadeBairros() {
+  const tablesDiv = document.getElementById('tables');
+  const topDensidade = Object.entries(densidadeBairros)
+    .filter(([,dados]) => dados.total > 0 && dados.area > 0)
+    .sort(([,a], [,b]) => parseFloat(b.densidade) - parseFloat(a.densidade))
+    .slice(0, 20);
+
+  let html = `<h3>🌡️ TOP 20 Bairros por Densidade (pts/km² 2015-2020)</h3>
+  <button class="btn-toggle" onclick="toggleTable('densidade-table')">👁️ Ver Ranking Completo</button>
+  <table class="summary-table-densidade table-compact" id="densidade-table" style="display:table;">
+  <thead><tr>
+    <th>🏘️ Ranking</th><th>Bairro</th><th>🌡️ Densidade (pts/km²)</th><th>📊 Total Pontos</th>
+    <th>📐 Área (km²)</th>`;
+  
+  anos.forEach(ano => html += `<th>${ano}</th>`);
+  html += '</tr></thead><tbody>';
+
+  let totalDensTop = 0, totalPontosTop = 0;
+  topDensidade.forEach(([nome, dados], index) => {
+    const rank = index + 1;
+    totalDensTop += parseFloat(dados.densidade);
+    totalPontosTop += dados.total;
+    html += `<tr class="${rank <= 5 ? 'densidade-highlight' : ''}">
+      <td><strong>#${rank}</strong></td>
+      <td><strong>${nome}</strong></td>
+      <td><strong>${dados.densidade}</strong></td>
+      <td>${dados.total.toLocaleString()}</td>
+      <td>${(dados.area / 1000000).toFixed(3)}</td>`;
+    anos.forEach(ano => html += `<td>${dados.anos[ano]}</td>`);
+    html += `</tr>`;
+  });
+
+
+  html += `<tr style="background:#880E4F !important;color:white;font-weight:bold;font-size:1.1em;">
+    <td colspan="2">TOP 20 TOTAL</td>
+    <td>${totalDensTop.toFixed(1)}</td>
+    <td>${totalPontosTop.toLocaleString()}</td>
+    <td>-</td>`;
+  anos.forEach(() => html += '<td>-</td>');
+  html += '</tr></tbody></table>';
+
+  tablesDiv.innerHTML += html;
+}
+
+// ===== DEMAIS TABELAS (mantidas iguais) =====
+function gerarResumoGeral(){
+  const tablesDiv = document.getElementById('tables');
+  let totalGeral = {total: 0};
+  anos.forEach(ano => totalGeral[ano] = 0);
+  
+  negociosGeoJSON.forEach(n => {
+    const ano = n.properties.ano;
+    if(ano) {
+      totalGeral[ano]++;
+      totalGeral.total++;
+    }
+  });
+  
+  let html = `<h3>📊 Resumo Geral: ${totalGeral.total.toLocaleString()} licenças (2015-2020)</h3>
+  <table class="summary-table"><thead><tr><th>Ano</th><th>Total</th></tr></thead><tbody>`;
+  anos.forEach(ano => html += `<tr><td>${ano}</td><td><b>${totalGeral[ano].toLocaleString()}</b></td></tr>`);
+  html += '</tbody></table>';
+  tablesDiv.innerHTML = html;
+}
+
+function gerarTop10Bairros(){
+  const tablesDiv = document.getElementById('tables');
+  const bairros = bairrosGeoJSON.features;
+  const contagemPorBairro = {};
+
+  bairros.forEach(bairro => {
+    const nome = bairro.properties.name || bairro.properties.nome || 'N/D';
+    contagemPorBairro[nome] = { total: 0, anos: {} };
+    anos.forEach(ano => contagemPorBairro[nome].anos[ano] = 0);
+  });
+
+  negociosGeoJSON.forEach(n => {
+    if(!isValidFeature(n)) return;
+    try {
+      const ponto = turf.point([n.geometry.coordinates[0], n.geometry.coordinates[1]]);
+      for(let bairro of bairros) {
+        if(turf.booleanPointInPolygon(ponto, bairro)) {
+          const nome = bairro.properties.name || bairro.properties.nome || 'N/D';
+          const ano = n.properties.ano;
+          contagemPorBairro[nome].anos[ano]++;
+          contagemPorBairro[nome].total++;
+          break;
+        }
+      }
+    } catch(e) {
+      console.warn('Turf erro:', e);
+    }
+  });
+
+  const top10 = Object.entries(contagemPorBairro)
+    .filter(([,dados]) => dados.total > 0)
+    .sort(([,a], [,b]) => b.total - a.total)
+    .slice(0, 10);
+
+  let html = `<h3>🏆 TOP 10 Bairros (Total Licenças)</h3>
+  <button class="btn-toggle" onclick="toggleTable('top10-table')">👁️ Mostrar Detalhes</button>
+  <div id="top10-table" style="display:none;">
+  <table class="summary-table-top table-compact"><thead><tr><th>🏘️ Bairro</th>`;
+  
+  anos.forEach(ano => html += `<th>${ano}</th>`);
+  html += '<th>📊 Total</th></tr></thead><tbody>';
+  
+  let totalTop10 = 0;
+  top10.forEach(([nome, dados]) => {
+    totalTop10 += dados.total;
+    html += `<tr><td><strong>${nome}</strong></td>`;
+    anos.forEach(ano => html += `<td>${dados.anos[ano]}</td>`);
+    html += `<td><strong>${dados.total}</strong></td></tr>`;
+  });
+  
+  html += `<tr style="background:#2E7D32 !important;color:white;font-weight:bold;"><td>TOP 10 TOTAL</td>`;
+  anos.forEach(ano => {
+    const somaAno = top10.reduce((sum, [_, dados]) => sum + dados.anos[ano], 0);
+    html += `<td>${somaAno}</td>`;
+  });
+  html += `<td><strong>${totalTop10}</strong></td></tr></tbody></table></div>`;
+  
+  tablesDiv.innerHTML += html;
+}
+
+function gerarTabelaCompleta(){
+  const tablesDiv = document.getElementById('tables');
+  const bairros = bairrosGeoJSON.features;
+  const contagemPorBairro = {};
+
+  bairros.forEach(bairro => {
+    const nome = bairro.properties.name || bairro.properties.nome || 'N/D';
+    contagemPorBairro[nome] = { total: 0, anos: {} };
+    anos.forEach(ano => contagemPorBairro[nome].anos[ano] = 0);
+  });
+
+  negociosGeoJSON.forEach(n => {
+    if(!isValidFeature(n)) return;
+    try {
+      const ponto = turf.point([n.geometry.coordinates[0], n.geometry.coordinates[1]]);
+      for(let bairro of bairros) {
+        if(turf.booleanPointInPolygon(ponto, bairro)) {
+          const nome = bairro.properties.name || bairro.properties.nome || 'N/D';
+          const ano = n.properties.ano;
+          contagemPorBairro[nome].anos[ano]++;
+          contagemPorBairro[nome].total++;
+          break;
+        }
+      }
+    } catch(e) {}
+  });
+
+  const bairrosOrdenados = Object.entries(contagemPorBairro)
+    .filter(([,dados]) => dados.total > 0)
+    .sort(([,a], [,b]) => b.total - a.total);
+
+  let html = `<h3>📈 Todas Licenças por Bairro</h3>
+  <button class="btn-toggle" onclick="toggleTable('complete-table')">👁️ Ver Completa</button>
+  <table class="summary-table-licencas table-compact" id="complete-table" style="display:table;">
+  <thead><tr><th>🏘️ Bairro</th>`;
+  
+  anos.forEach(ano => html += `<th>${ano}</th>`);
+  html += '<th>📊 Total</th><th>%</th></tr></thead><tbody>';
+
+  let totalGeral = 0;
+  bairrosOrdenados.forEach(([nome, dados]) => totalGeral += dados.total);
+
+  bairrosOrdenados.slice(0,50).forEach(([nome, dados]) => {
+    const pct = ((dados.total / totalGeral) * 100).toFixed(1);
+    html += `<tr><td><strong>${nome}</strong></td>`;
+    anos.forEach(ano => html += `<td>${dados.anos[ano]}</td>`);
+    html += `<td><strong>${dados.total.toLocaleString()}</strong></td><td>${pct}%</td></tr>`;
+  });
+
+  html += `<tr style="background:#D32F2F !important;color:white;font-size:1.1em;font-weight:bold;">
+    <td>TOTAL GERAL</td>`;
+  anos.forEach(ano => {
+    const totalAno = bairrosOrdenados.reduce((sum, [_, dados]) => sum + dados.anos[ano], 0);
+    html += `<td>${totalAno.toLocaleString()}</td>`;
+  });
+  html += `<td><strong>${totalGeral.toLocaleString()}</strong></td><td>100%</td></tr></tbody></table>`;
+  
+  tablesDiv.innerHTML += html;
+}
+
+function gerarTabelaHeatmap(){
+  const tablesDiv = document.getElementById('tables');
+  const statsHeatmap = {};
+  
+  anos.forEach(ano => {
+    const pontosAno = negociosGeoJSON.filter(n => n.properties.ano === ano).length;
+    statsHeatmap[ano] = {
+      total: pontosAno,
+      densidadeMedia: (pontosAno / 1000).toFixed(1)
+    };
+  });
+  
+  let totalPontos = 0;
+  anos.forEach(ano => totalPontos += statsHeatmap[ano].total);
+  
+  let html = `<h3>🌡️ Estatísticas Heatmap Geral</h3>
+  <table class="summary-table-heatmap table-compact">
+  <thead><tr><th>Ano</th><th>Pontos</th><th>Densidade Média</th><th>%</th></tr></thead><tbody>`;
+  
+  anos.forEach(ano => {
+    const pct = ((statsHeatmap[ano].total / totalPontos) * 100).toFixed(1);
+    html += `<tr>
+      <td><strong>${ano}</strong></td>
+      <td>${statsHeatmap[ano].total.toLocaleString()}</td>
+      <td>${statsHeatmap[ano].densidadeMedia}</td>
+      <td>${pct}%</td>
+    </tr>`;
+  });
+  
+  html += `<tr style="background:#7B1FA2 !important;color:white;font-weight:bold;">
+    <td><strong>TOTAL</strong></td>
+    <td><strong>${totalPontos.toLocaleString()}</strong></td>
+    <td>-</td>
+    <td>100%</td>
+  </tr></tbody></table>`;
+  
+  tablesDiv.innerHTML += html;
+}
+
+  // Inicializar
+  bairros.forEach(bairro => {
+    const nome = bairro.properties.name || bairro.properties.nome || 'N/D';
+    statusPorBairro[nome] = { ativa: 0, inativa: 0, total: 0 };
+  });
+
+function gerarTabelaStatusPorAno() {
+  const tablesDiv = document.getElementById('tables');
+
+  // Inicializa contagem por ano
+  const statusPorAno = {};
+  anos.forEach(ano => {
+    statusPorAno[ano] = { Active: 0, Inactive: 0, total: 0 };
+  });
+
+  // Conta status dos negócios
+  negociosGeoJSON.forEach(n => {
+    const ano = n.properties.ano;
+    const status = n.properties.licstatus || '';
+
+    if (!statusPorAno[ano]) return;
+
+    if (status === 'Active') {
+      statusPorAno[ano].Active++;
+    } else if (status === 'Inactive') {
+      statusPorAno[ano].Inactive++;
+    }
+    statusPorAno[ano].total++;
+  });
+
+  // Gera tabela HTML
+  let html = `
+    <h3>📊 Evolução das Licenças por Ano (2015–2020)</h3>
+    <table class="summary-table table-compact">
+      <thead>
+        <tr>
+          <th>Ano</th>
+          <th>🟢 Active</th>
+          <th>🔴 Inactive</th>
+          <th>📊 Total</th>
+          <th>% Active</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  anos.forEach(ano => {
+    const d = statusPorAno[ano];
+    const pctActive = d.total > 0 ? ((d.Active / d.total) * 100).toFixed(1) : 0;
+
+    html += `
+      <tr>
+        <td><strong>${ano}</strong></td>
+        <td style="color:#2E7D32;"><strong>${d.Active}</strong></td>
+        <td style="color:#C62828;">${d.Inactive}</td>
+        <td>${d.total}</td>
+        <td>${pctActive}%</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  tablesDiv.innerHTML += html;
+}
+
+
+function toggleTable(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+</body>
+</html>

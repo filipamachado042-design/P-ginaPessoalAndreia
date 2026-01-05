@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estágios Profissionais</title>
+
+  <link rel="stylesheet" href="projeto3.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Currículo Vitae Pessoal</h1>
+    <p>Cartografando ideias, analisando o mundo.</p>
+  </header>
+
+  <nav class="navbar">
+    <a href="inicial.html">Página Inicial</a>
+    <a href="curriculo.html">Dados Pessoais e Competências</a>
+    <a href="formacao.html">Formação Profissional</a>
+    <a href="educacao.html">Educação e Formação</a>
+    <a href="trabalhos.html">Trabalhos Desenvolvidos</a>
+    <a href="certificados.html">Certificados</a>
+    <a href="projeto2.html">Boston</a>
+    <a href="projeto3.html">Projeto 3</a>
+  </nav>
+
+  <!-- MAPA -->
+  <div id="map"></div>
+
+  <!-- TIMELINE (fora do mapa, como queres) -->
+  <div id="timeline-container">
+    <input type="range" id="ano-slider" min="2010" max="2025" value="2010" step="1">
+    <button id="play-btn">▶</button>
+    <span>Ano: <span id="ano-label">2010</span></span>
+  </div>
+
+
+<!--GLOSSARIO-->
+<section id="glossario">
+  <h2>Glossário</h2>
+  <ul>
+    <li><strong>AL</strong> — Alojamento Local</li>
+    <li><strong>Heatmap</strong> — Criados para visualizar os padrões de concentração de dados geográficos usando a análise de densidade de dados pontuais (esri, 2023).</li>
+    <li><strong>Subseção estatística</strong> — Corresponde ao quarteirão nas áreas urbanas, ao lugar ou parte do lugar nas áreas rurais ou a áreas residuais que podem ou não conter unidades estatísticas (isolados) (Instituto Nacional de Estatística, 2014).</li>
+    <li><strong>Património Cultural</strong> — Todos os bens que, sendo testemunhos com valor de civilização ou de cultura, portadores de interesse cultural relevante, devam ser objeto de especial proteção e valorização (Direção-Geral da Educação, 2014).</li>
+    <li><strong>Alojamento Local</strong> — Prestam serviços de alojamento temporário, nomeadamente a turistas, mediante remuneração desde que não reúnam os requisitos para serem considerados empreendimentos turísticos (Turismo de Portugal, 2025).</li>
+    <li><strong> Hotel</strong>- empreendimentos turísticos classificados (1 a 5 estrelas), com estruturas profissionais, equipamentos obrigatórios como receção 24h e serviços complementares (restaurante, limpeza diária) (Turismo de Portugal,2022).</li>
+  </ul>
+</section>
+
+<!-- METADADOS -->
+  <div class="timeline-metadata">
+    <strong>Metadados:</strong><br>
+    Alojamento Local — Turismo de Portugal<br>
+    Subsecções estatísticas — Censos 2021, Instituto Nacional de Estatística (BGRI)<br>
+    Património cultural — PIN: Museus e Património Cultural da Área Metropolitana do Porto
+  </div>
+  <script>
+    // ========= Funções de fullscreen da PÁGINA =========
+    function isFullscreen() {
+      return document.fullscreenElement ||
+             document.webkitFullscreenElement ||
+             document.mozFullScreenElement ||
+             document.msFullscreenElement;
+    }
+
+    function requestFullscreen(elem) {
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+      else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+      else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+
+    function toggleFullscreen() {
+      if (!isFullscreen()) {
+        // página inteira (html/documentElement) em fullscreen
+        requestFullscreen(document.documentElement);
+      } else {
+        exitFullscreen();
+      }
+    }
+
+    // ========= MAPA LEAFLET =========
+    const map = L.map('map').setView([41.15, -8.61], 12);
+
+    map.createPane('paneMuseus');
+    map.getPane('paneMuseus').style.zIndex = 650;
+    map.getPane('paneMuseus').style.pointerEvents = 'auto';
+
+    // BASEMAP LIGHT GRAY (CartoDB Positron)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    }).addTo(map);
+
+    // Botão de fullscreen custom no canto superior esquerdo
+    const fullscreenBtn = L.control({ position: 'topleft' });
+    fullscreenBtn.onAdd = function(map) {
+      const btn = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+      btn.title = 'Fullscreen';
+      btn.style.width = '26px';
+      btn.style.height = '26px';
+      btn.style.cursor = 'pointer';
+      btn.style.textAlign = 'center';
+      btn.style.lineHeight = '26px';
+      btn.style.fontSize = '16px';
+      btn.innerHTML = '⤢';
+
+      L.DomEvent.on(btn, 'click', function (e) {
+        L.DomEvent.stopPropagation(e);
+        toggleFullscreen();
+      });
+
+      return btn;
+    };
+    fullscreenBtn.addTo(map);
+
+    function corPorTipologia(modalidade) {
+      if (!modalidade) return "#3388ff";
+      const tip = modalidade.toString().trim();
+      switch (tip) {
+        case "Apartamento": return "#ffcc33";
+        case "Moradia": return "#2ca25f";
+        case "EstabelecimentoHospedagem":
+        case "Estabelecimento de Hospedagem": return "#e31a1c";
+        case "Quartos": return "#ff7f00";
+        case "EstabelecimentoHospedagemHostel":
+        case "Estabelecimento de Hospedagem (Hostel)": return "#756bb1";
+        default: return "#3388ff";
+      }
+    }
+
+    let geojsonDataGlobal = null;
+    let layerSubseccoesContorno = null;
+    let layerDensidade2021 = null;
+    let layerDensidadeArea = null;
+    let heatLayer = null;
+    let layerControl = null;
+    let layerMuseus = null;
+
+    let heatmapAtiva = true;
+
+    const gruposModalidade = {
+      "Apartamento": L.markerClusterGroup({ disableClusteringAtZoom: 18 }),
+      "Moradia": L.markerClusterGroup({ disableClusteringAtZoom: 18 }),
+      "EstabelecimentoHospedagem": L.markerClusterGroup({ disableClusteringAtZoom: 18 }),
+      "Quartos": L.markerClusterGroup({ disableClusteringAtZoom: 18 }),
+      "EstabelecimentoHospedagemHostel": L.markerClusterGroup({ disableClusteringAtZoom: 18 })
+    };
+    Object.values(gruposModalidade).forEach(g => g.addTo(map));
+
+    const freguesiasAlvo = [
+      'União das freguesias de Cedofeita, Santo Ildefonso, Sé, Miragaia, São Nicolau e Vitória',
+      'União das freguesias de Lordelo do Ouro e Massarelos',
+      'União das freguesias de Aldoar, Foz do Douro e Nevogilde'
+    ];
+
+    function pertenceFreguesiaAlvo(freguesia) {
+      return freguesiasAlvo.some(f => (freguesia || "").includes(f));
+    }
+
+    // SUBSECÇÕES
+    fetch('ficheiros/PortoSubseccao2021.geojson')
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(geojsonSub => {
+        layerSubseccoesContorno = L.geoJSON(geojsonSub, {
+          style: {
+            fillColor: 'transparent',
+            fillOpacity: 0,
+            color: '#555555',
+            weight: 0.5
+          }
+        }).addTo(map);
+
+        layerDensidade2021 = L.geoJSON(geojsonSub, {
+          style: {
+            fillColor: 'transparent',
+            fillOpacity: 0
+          }
+        }).addTo(map);
+
+        layerDensidadeArea = L.geoJSON(geojsonSub, {
+          style: {
+            fillColor: 'transparent',
+            fillOpacity: 0
+          }
+        }).addTo(map);
+      })
+      .catch(err => console.error('Erro ao carregar PortoSubseccao2021:', err));
+
+
+// EDIFICADO PORTO
+let layerEdificadoPorto = null;
+fetch('ficheiros/edificadoPorto.geojson')
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(geojsonEdif => {
+    layerEdificadoPorto = L.geoJSON(geojsonEdif, {
+      style: {
+        fillColor: '#000000',
+        fillOpacity: 0.3,
+        color: '#000000',
+        weight: 1.5,
+        opacity: 1
+      }
+    }).addTo(map);
+  })
+  .catch(err => console.error('Erro ao carregar edificadoPorto:', err));
+    
+    // AL
+    fetch('ficheiros/Estabelecimentos_de_Alojamento_Local.geojson')
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(geojsonData => {
+        geojsonDataGlobal = geojsonData;
+
+        const anos = geojsonData.features
+          .filter(f => pertenceFreguesiaAlvo(f.properties.Freguesia))
+          .map(f => {
+            const v = f.properties["DataRegisto"];
+            if (!v) return null;
+            const s = v.toString().trim();
+            const a = parseInt(s.substring(0, 4), 10);
+            return isNaN(a) ? null : a;
+          })
+          .filter(a => a !== null);
+
+        const anoMax = Math.max(...anos);
+        const anoMin = 2010;
+
+        const slider  = document.getElementById('ano-slider');
+        const label   = document.getElementById('ano-label');
+        const playBtn = document.getElementById('play-btn');
+
+        slider.min   = anoMin;
+        slider.max   = anoMax;
+        slider.value = anoMin;
+        label.textContent = anoMin;
+
+        function atualizarLayers(anoLimite) {
+          label.textContent = anoLimite;
+
+          Object.values(gruposModalidade).forEach(g => g.clearLayers());
+          const markersParaBounds = [];
+
+          geojsonDataGlobal.features.forEach(feature => {
+            const freg = feature.properties.Freguesia || "";
+            if (!pertenceFreguesiaAlvo(freg)) return;
+
+            const v = feature.properties["DataRegisto"];
+            if (!v) return;
+            const s = v.toString().trim();
+            const a = parseInt(s.substring(0, 4), 10);
+            if (isNaN(a) || a > anoLimite || a < 2010) return;
+
+            let modalidade = feature.properties.Modalidade;
+            if (!modalidade) return;
+            if (!gruposModalidade[modalidade]) return;
+
+            const grupo = gruposModalidade[modalidade];
+
+            if (!feature.geometry || feature.geometry.type !== "Point") return;
+            const coords = feature.geometry.coordinates;
+            const latlng = [coords[1], coords[0]];
+
+            const marker = L.circleMarker(latlng, {
+              radius: 8,
+              color: "#000000",
+              weight: 1,
+              fillColor: corPorTipologia(modalidade),
+              fillOpacity: 0.9
+            });
+
+            const props = feature.properties || {};
+            marker.bindPopup(
+              Object.entries(props)
+                .map(([key, value]) => `<b>${key}</b>: ${value}`)
+                .join("<br>")
+            );
+
+            grupo.addLayer(marker);
+            markersParaBounds.push(marker);
+          });
+
+          const fg = L.featureGroup(markersParaBounds);
+          if (markersParaBounds.length > 0 && fg.getBounds().isValid()) {
+            map.fitBounds(fg.getBounds());
+          }
+
+          // HEATMAP
+          if (heatmapAtiva) {
+            if (heatLayer) map.removeLayer(heatLayer);
+            const pontosHeat = [];
+            geojsonDataGlobal.features.forEach(feature => {
+              const freg = feature.properties.Freguesia || "";
+              if (!pertenceFreguesiaAlvo(freg)) return;
+
+              const v = feature.properties["DataRegisto"];
+              if (!v) return;
+              const s = v.toString().trim();
+              const a = parseInt(s.substring(0, 4), 10);
+              if (isNaN(a) || a > anoLimite || a < 2010) return;
+
+              if (!feature.geometry || feature.geometry.type !== "Point") return;
+              const coords = feature.geometry.coordinates;
+              pontosHeat.push([coords[1], coords[0], 1]);
+            });
+            if (pontosHeat.length > 0) {
+              heatLayer = L.heatLayer(pontosHeat, {
+                radius: 25,
+                blur: 15,
+                maxZoom: 17
+              }).addTo(map);
+            }
+          }
+
+          // Densidade AL / hab
+          if (layerDensidade2021) {
+            function getColor(d) {
+              return d > 5     ? '#800026' :
+                     d > 3     ? '#BD0026' :
+                     d > 2     ? '#E31A1C' :
+                     d > 0.008 ? '#FC4E2A' :
+                     d > 0.005 ? '#FD8D3C' :
+                     d > 0     ? '#FFFF00' :
+                                 '#FFEDA0';
+            }
+            layerDensidade2021.eachLayer(lay => {
+              const dens = lay.feature.properties.dens || 0;
+              if (anoLimite === 2021) {
+                lay.setStyle({
+                  fillColor: dens > 0 ? getColor(dens) : 'transparent',
+                  fillOpacity: dens > 0 ? 0.7 : 0,
+                  color: '#555555',
+                  weight: 0.5
+                });
+              } else {
+                lay.setStyle({
+                  fillColor: 'transparent',
+                  fillOpacity: 0,
+                  color: 'transparent',
+                  weight: 0
+                });
+              }
+            });
+          }
+
+          // Densidade AL / m²
+          if (layerDensidadeArea) {
+            function getColorArea(d) {
+              return d > 0.02   ? '#084081' :
+                     d > 0.015  ? '#0868ac' :
+                     d > 0.01   ? '#2b8cbe' :
+                     d > 0.0005 ? '#4eb3d3' :
+                     d > 0      ? '#7bccc4' :
+                                   '#f0f9e8';
+            }
+            layerDensidadeArea.eachLayer(lay => {
+              const dens1 = lay.feature.properties.dens1 || 0;
+              if (anoLimite === 2021) {
+                lay.setStyle({
+                  fillColor: dens1 > 0 ? getColorArea(dens1) : 'transparent',
+                  fillOpacity: dens1 > 0 ? 0.7 : 0,
+                  color: '#555555',
+                  weight: 0.5
+                });
+              } else {
+                lay.setStyle({
+                  fillColor: 'transparent',
+                  fillOpacity: 0,
+                  color: 'transparent',
+                  weight: 0
+                });
+              }
+            });
+          }
+        }
+
+        atualizarLayers(anoMin);
+
+        slider.addEventListener('input', e => {
+          const ano = parseInt(e.target.value, 10);
+          atualizarLayers(ano);
+        });
+
+        let animInterval = null;
+        let isPlaying = false;
+
+        function startAnimacao() {
+          if (isPlaying) return;
+          isPlaying = true;
+          playBtn.textContent = "⏸";
+          animInterval = setInterval(() => {
+            let anoAtual = parseInt(slider.value, 10);
+            const anoMaximo = parseInt(slider.max, 10);
+            if (anoAtual >= anoMaximo) slider.value = slider.min;
+            else slider.value = anoAtual + 1;
+            atualizarLayers(parseInt(slider.value, 10));
+          }, 600);
+        }
+
+        function stopAnimacao() {
+          isPlaying = false;
+          playBtn.textContent = "▶";
+          if (animInterval) {
+            clearInterval(animInterval);
+            animInterval = null;
+          }
+        }
+
+        playBtn.addEventListener('click', () => {
+          if (isPlaying) stopAnimacao(); else startAnimacao();
+        });
+
+        // CONTROLO DE LAYERS
+        layerControl = L.control.layers(null, null, { collapsed: false }).addTo(map);
+
+        const overlaysModalidades = {
+          '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #000;background:#ffcc33;margin-right:4px;vertical-align:middle;"></span>Apartamento':
+             gruposModalidade["Apartamento"],
+          '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #000;background:#2ca25f;margin-right:4px;vertical-align:middle;"></span>Moradia':
+             gruposModalidade["Moradia"],
+          '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #000;background:#e31a1c;margin-right:4px;vertical-align:middle;"></span>Estabelecimento de Hospedagem':
+             gruposModalidade["EstabelecimentoHospedagem"],
+          '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #000;background:#ff7f00;margin-right:4px;vertical-align:middle;"></span>Quartos':
+             gruposModalidade["Quartos"],
+          '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #000;background:#756bb1;margin-right:4px;vertical-align:middle;"></span>Estabelecimento de Hospedagem (Hostel)':
+             gruposModalidade["EstabelecimentoHospedagemHostel"]
+        };
+
+        const overlaysSubseccoes = {
+          'Subseções em estudo (contorno)': layerSubseccoesContorno
+        };
+
+        const overlaysDensidade = {
+          'Densidade AL / hab (2021)': layerDensidade2021,
+          'Densidade AL / m² (2021)': layerDensidadeArea
+        };
+
+        Object.entries(overlaysModalidades).forEach(([name, layer]) => {
+          layerControl.addOverlay(layer, name);
+        });
+        Object.entries(overlaysSubseccoes).forEach(([name, layer]) => {
+          layerControl.addOverlay(layer, name);
+        });
+        Object.entries(overlaysDensidade).forEach(([name, layer]) => {
+          layerControl.addOverlay(layer, name);
+        });
+
+        // HEATMAP - controla estado corretamente
+        const heatDummy = L.layerGroup();
+        layerControl.addOverlay(heatDummy, 'Heatmap AL (2010–ano selecionado)');
+        map.addLayer(heatDummy);
+        heatDummy.on('add', () => {
+          heatmapAtiva = true;
+          if (heatLayer) map.addLayer(heatLayer);
+        });
+        heatDummy.on('remove', () => {
+          heatmapAtiva = false;
+          if (heatLayer) map.removeLayer(heatLayer);
+        });
+
+        // MUSEUS - CORRIGIDO COM CAMPO INFO
+        layerMuseus = L.geoJSON(null, {
+          pointToLayer: (feature, latlng) => {
+            return L.circleMarker(latlng, {
+              pane: 'paneMuseus',
+              radius: 8,
+              color: "#000000",
+              weight: 1,
+              fillColor: "#1f78b4",
+              fillOpacity: 0.9
+            });
+          },
+          onEachFeature: (feature, layer) => {
+            const props = feature.properties || {};
+            const nome   = props.Name || props.name || "Museu / Património";
+            const info   = props.info || "Sem informação adicional";  // ← CAMPO INFO ADICIONADO
+            const imgFile = props.Img || props.img || null;
+
+            let html = `<div style="min-width:200px;font-size:14px;">`;
+            html += `<h4 style="margin:0 0 8px 0;color:#1f78b4;">${nome}</h4>`;
+            
+            // ← EXIBIÇÃO DO CAMPO INFO
+            html += `<p style="margin:4px 0;color:#333;font-style:italic;">${info}</p>`;
+
+            if (imgFile) {
+              const imgPath = `img_museus/${imgFile}`;
+              html += `
+                <div style="margin-bottom:6px;text-align:center;">
+                  <img src="${imgPath}"
+                       alt="${nome}"
+                       style="max-width:220px;max-height:150px;border:1px solid #999;">
+                </div>
+              `;
+            }
+
+            html += `</div>`;
+
+            layer.bindPopup(html, {
+              maxWidth: 260,
+              className: 'popup-museu'
+            });
+          }
+        }).addTo(map);
+
+        layerControl.addOverlay(
+          layerMuseus,
+          '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #000;background:#1f78b4;margin-right:4px;vertical-align:middle;"></span>Museus e Património'
+        );
+
+        fetch('ficheiros/MuseusPatrimonioCultura.geojson')
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(geojsonMuseus => {
+          layerMuseus.addData(geojsonMuseus);
+          layerMuseus.bringToFront();
+        })
+        .catch(err => console.error("Erro ao carregar MuseusPatrimonioCultura:", err));
+
+        // TÍTULOS E CLASSES
+        setTimeout(() => {
+          const box = document.querySelector('.leaflet-control-layers-overlays');
+          if (!box) return;
+
+          function addTitulo(nome, camadasTexto){
+            const lbl = [...box.querySelectorAll('label')].find(l =>
+              camadasTexto.some(txt => l.textContent.includes(txt))
+            );
+            if (!lbl) return;
+
+            const t = document.createElement("div");
+            t.className = "tituloGrupo";
+            t.innerText = nome + "  ▼";
+
+            t.addEventListener('click', () => {
+              let el = t.nextElementSibling;
+              let esconder = true;
+              if (el && !el.classList.contains('tituloGrupo')) {
+                esconder = (el.style.display !== 'none');
+              }
+              while (el && !el.classList.contains('tituloGrupo')) {
+                el.style.display = esconder ? 'none' : '';
+                el = el.nextElementSibling;
+              }
+            });
+
+            box.insertBefore(t, lbl);
+          }
+
+          addTitulo("Modalidades AL",[
+            "Apartamento","Moradia","Estabelecimento de Hospedagem",
+            "Quartos","Estabelecimento de Hospedagem (Hostel)"
+          ]);
+
+          addTitulo("Subseções Territoriais",[
+            "Subseções em estudo"
+          ]);
+
+          addTitulo("Densidade AL (2021)",[
+            "Densidade AL / hab (2021)",
+            "Densidade AL / m² (2021)"
+          ]);
+
+          addTitulo("Heatmap AL",[
+            "Heatmap AL (2010–ano selecionado)"
+          ]);
+
+          addTitulo("Património Cultural",[
+            "Museus e Património"
+          ]);
+
+          const labelsCtl = [...box.querySelectorAll('label')];
+
+          // Densidade AL / hab – classes
+          const lblDensInd = labelsCtl.find(l => l.textContent.includes('Densidade AL / hab (2021)'));
+          if (lblDensInd) {
+            const classesDens = [
+              { label: '> 5',             color: '#800026' },
+              { label: '3 – 5',          color: '#BD0026' },
+              { label: '2 – 3',          color: '#E31A1C' },
+              { label: '0.008 – 2',      color: '#FC4E2A' },
+              { label: '0.005 – 0.008',  color: '#FD8D3C' },
+              { label: '0 – 0.01',       color: '#FEB24C' }
+            ];
+            let refNode = lblDensInd.nextSibling;
+            classesDens.forEach(c => {
+              const row = document.createElement('div');
+              row.style.display = 'flex';
+              row.style.alignItems = 'center';
+              row.style.marginLeft = '18px';
+              row.style.marginTop = '2px';
+
+              const boxColor = document.createElement('span');
+              boxColor.style.display = 'inline-block';
+              boxColor.style.width = '12px';
+              boxColor.style.height = '12px';
+              boxColor.style.marginRight = '4px';
+              boxColor.style.border = '1px solid #000';
+              boxColor.style.background = c.color;
+
+              const txt = document.createElement('span');
+              txt.textContent = c.label;
+
+              row.appendChild(boxColor);
+              row.appendChild(txt);
+              box.insertBefore(row, refNode);
+            });
+          }
+
+          // Densidade AL / m² – classes
+          const lblDensArea = labelsCtl.find(l => l.textContent.includes('Densidade AL / m² (2021)'));
+          if (lblDensArea) {
+            const classesArea = [
+              { label: '> 0.02',         color: '#084081' },
+              { label: '0.015 – 0.02',   color: '#0868ac' },
+              { label: '0.01 – 0.015',   color: '#2b8cbe' },
+              { label: '0.0005 – 0.01',  color: '#4eb3d3' },
+              { label: '0 – 0.0005',     color: '#7bccc4' }
+            ];
+            let refNodeArea = lblDensArea.nextSibling;
+            classesArea.forEach(c => {
+              const row = document.createElement('div');
+              row.style.display = 'flex';
+              row.style.alignItems = 'center';
+              row.style.marginLeft = '18px';
+              row.style.marginTop = '2px';
+
+              const boxColor = document.createElement('span');
+              boxColor.style.display = 'inline-block';
+              boxColor.style.width = '12px';
+              boxColor.style.height = '12px';
+              boxColor.style.marginRight = '4px';
+              boxColor.style.border = '1px solid #000';
+              boxColor.style.background = c.color;
+
+              const txt = document.createElement('span');
+              txt.textContent = c.label;
+
+              row.appendChild(boxColor);
+              row.appendChild(txt);
+              box.insertBefore(row, refNodeArea);
+            });
+          }
+
+          // Heatmap
+          const lblHeat = labelsCtl.find(l => l.textContent.includes('Heatmap AL (2010–ano selecionado)'));
+          if (lblHeat) {
+            const classesHeat = [
+              { label: 'Baixa',  color: '#00f' },
+              { label: 'Média',  color: '#0f0' },
+              { label: 'Alta',   color: '#ff0' },
+              { label: 'Máxima', color: '#f00' }
+            ];
+            let refNodeH = lblHeat.nextSibling;
+            classesHeat.forEach(c => {
+              const row = document.createElement('div');
+              row.style.display = 'flex';
+              row.style.alignItems = 'center';
+              row.style.marginLeft = '18px';
+              row.style.marginTop = '2px';
+
+              const boxColor = document.createElement('span');
+              boxColor.style.display = 'inline-block';
+              boxColor.style.width = '12px';
+              boxColor.style.height = '12px';
+              boxColor.style.marginRight = '4px';
+              boxColor.style.border = '1px solid #000';
+              boxColor.style.background = c.color;
+
+              const txt = document.createElement('span');
+              txt.textContent = c.label;
+
+              row.appendChild(boxColor);
+              row.appendChild(txt);
+              box.insertBefore(row, refNodeH);
+            });
+          }
+
+        }, 1500);
+
+
+        // Botão esconder/mostrar controlo de layers
+        setTimeout(() => {
+          const ctl = document.querySelector('.leaflet-control-layers');
+          if (!ctl) return;
+
+          const toggleBtn = document.createElement('div');
+          toggleBtn.textContent = '✕';
+          toggleBtn.className = 'layers-toggle-btn';
+
+          const inner = document.createElement('div');
+          while (ctl.firstChild) {
+            inner.appendChild(ctl.firstChild);
+          }
+          ctl.appendChild(toggleBtn);
+          ctl.appendChild(inner);
+
+          let fechado = false;
+          toggleBtn.addEventListener('click', () => {
+            fechado = !fechado;
+            if (fechado) {
+              inner.style.display = 'none';
+              toggleBtn.textContent = '☰';
+            } else {
+              inner.style.display = '';
+              toggleBtn.textContent = '✕';
+            }
+          });
+        }, 2000);
+
+      })
+      .catch(error => {
+        console.error('Erro ao carregar o GeoJSON de AL:', error);
+        alert('Erro ao carregar o GeoJSON de AL. Verifique a pasta e o nome do arquivo.');
+      });
+  </script>
+
+  <footer>
+    <h4>Mapear é compreender. Cada dado espacial é uma história do território à espera de ser contada!</h4>
+  </footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,323 @@
+/* ===== Layout geral da página ===== */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #fff;
+}
+
+header {
+  background: #9ED3E8;
+  padding: 50px 0 25px 0;
+  margin: 0;
+  text-align: center;
+  color: #1D3557;
+}
+
+/* ===== Barra de navegação (mantém as tuas cores) ===== */
+.navbar {
+  display: flex;
+  background-color: #457B9D;
+  margin: 0;
+  padding: 0 40px;
+  height: 60px;
+  align-items: center;
+}
+
+.navbar a {
+  color: white;
+  padding: 14px 20px;
+  text-decoration: none;
+  text-align: center;
+}
+
+.navbar a:hover {
+  background-color: #A8DADC;
+  color: black;
+}
+
+/* ===== Container genérico (se usares) ===== */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  background: white;
+  padding: 24px 16px 20px 16px;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+/* ===== Mapa e timeline ===== */
+#map {
+  height: 650px;
+  width: 100%;
+  margin: 20px auto 0 auto;   /* 20px de espaço acima, centrado */
+  border-radius: 10px;
+  border: 2px solid #2c3e50;
+}
+
+#timeline-container {
+  width: 70%;
+  margin: 10px auto 0 auto;
+  text-align: center;
+}
+
+#ano-label {
+  margin-left: 10px;
+  font-weight: bold;
+}
+
+#play-btn {
+  margin-left: 10px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+/* ===== Controlo de layers Leaflet ===== */
+.leaflet-control-layers {
+  max-width: 260px;
+  max-height: 350px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgba(255, 255, 255, 0.7); /* transparente */
+  box-shadow: 0 0 6px rgba(0,0,0,0.3);
+  border-radius: 10px;
+  padding: 6px;
+  font-size: 11px;
+  position: relative;        /* para o botão de toggle */
+  transition: opacity 0.2s ease;
+}
+
+.leaflet-control-layers-expanded.mod-title::before {
+  content: "Modalidades e camadas";
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+/* Botão para esconder/mostrar a caixa toda */
+.layers-toggle-btn {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 10px;
+  padding: 0 6px;
+  line-height: 16px;
+  border: 1px solid #aaa;
+}
+
+/* Grupo de títulos do painel */
+.tituloGrupo{
+  background:#dedede;
+  padding:4px 6px;
+  margin-top:6px;
+  border-radius:5px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.tituloGrupo:hover{
+  background:#c9c9c9;
+}
+
+/* Popup dos museus */
+.popup-museu {
+  font-family: Arial, sans-serif;
+}
+
+/* ===== Footer (fica com a tua cor azul) ===== */
+footer {
+  background: #39759b;
+  color: #fff;
+  text-align: center;
+  padding: 25px 0 12px 0;
+  margin-top: 60px;
+}
+
+footer h4 {
+  margin: 0;
+  font-weight: 400;
+}
+
+.timeline-metadata {
+  margin-top: 6px;
+  font-size: 11px;
+  font-style: italic;
+  color: #555;
+}
+#glossario {
+  max-width: 1000px;              /* largura do card */
+  margin: 40px 0 40px 0;         /* topo e espaço inferior */
+  padding: 20px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 12px;
+  border-color: #39759b;
+  border: 3px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  color: #333;
+  font-size: 12px;
+  line-height: 1;
+  
+  /* Alinhamento à esquerda */
+  position: relative;
+  clear: both;                   /* evita sobreposição com itens anteriores */
+}
+
+#glossario h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+#glossario ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+#glossario li {
+  margin-bottom: 10px;
+}
+
+
+/* Até 1024px (portátil / tablet landscape) */
+@media (max-width: 1024px) {
+  header {
+    padding: 35px 10px 20px 10px;
+  }
+
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .navbar a {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  #map {
+    width: 85%;
+    height: 550px;
+  }
+
+  #timeline-container {
+    width: 85%;
+  }
+
+  .leaflet-control-layers {
+    max-width: 220px;
+    max-height: 300px;
+    font-size: 10px;
+  }
+}
+
+/* Até 768px (tablet portrait) */
+@media (max-width: 768px) {
+  header {
+    padding: 25px 10px 15px 10px;
+  }
+
+  .navbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    height: auto;
+    padding: 8px 10px;
+  }
+
+  .navbar a {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  #map {
+    width: 95%;
+    height: 450px;
+    margin-top: 15px;
+  }
+
+  #timeline-container {
+    width: 95%;
+    margin-top: 8px;
+  }
+
+  #timeline-container input[type="range"] {
+    width: 70%;
+  }
+
+  #play-btn {
+    margin-top: 6px;
+  }
+
+  .leaflet-control-layers {
+    max-width: 200px;
+    max-height: 260px;
+  }
+
+  footer {
+    margin-top: 40px;
+    padding: 18px 8px 10px 8px;
+  }
+}
+
+/* Até 480px (telemóvel) */
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 20px;
+  }
+
+  header p {
+    font-size: 13px;
+    padding: 0 10px;
+  }
+
+  .navbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .navbar a {
+    padding: 8px;
+    font-size: 12px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+  }
+
+  #map {
+    width: 100%;
+    height: 380px;
+    margin: 10px 0 0 0;
+    border-radius: 0;
+  }
+
+  #timeline-container {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  #timeline-container input[type="range"] {
+    width: 65%;
+  }
+
+  #play-btn {
+    margin-left: 4px;
+    padding: 3px 8px;
+  }
+
+  .leaflet-control-layers {
+    max-width: 90%;
+    max-height: 220px;
+    left: 5px !important;
+    right: auto !important;
+  }
+
+  .layers-toggle-btn {
+    top: 2px;
+    right: 4px;
+  }
+
+  footer h4 {
+    font-size: 12px;
+    padding: 0 8px;
+  }
+}

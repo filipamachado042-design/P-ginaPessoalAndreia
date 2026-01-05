@@ -1,0 +1,127 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #fff;
+}
+header {
+  background: #9ED3E8;
+  padding: 50px 0 25px 0;
+  margin: 0;
+  text-align: center;
+  color: #1D3557;
+}
+.navbar {
+  display: flex;
+  background-color: #457B9D;
+  margin: 0;
+  padding: 0 40px;
+  height: 60px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.navbar a {
+  color: white;
+  padding: 14px 20px;
+  text-decoration: none;
+  text-align: center;
+}
+.navbar a:hover {
+  background-color: #A8DADC;
+  color: black;
+}
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 12px 32px 12px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.bloco-certificados {
+  background: #f4f4f4;
+  border: 1px solid #146ca3;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 48px 34px 38px 34px;
+  box-shadow: 0 8px 32px rgba(21, 108, 163, 0.1);
+}
+.titulo {
+  font-size: 1.5rem;
+  color: #146ca3;
+  margin-bottom: 28px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-align: left;
+}
+.galeria-certificados {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 36px;
+  margin-top: 16px;
+}
+.item-galeria {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  background: #f8fbfe;
+  border-radius: 12px;
+  padding: 20px 8px 24px 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
+.item-galeria a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+.item-galeria img {
+  width: 100%;
+  max-width: 340px;
+  min-width: 180px;
+  min-height: 128px;
+  height: auto;
+  margin: 0 auto 12px auto;
+  border-radius: 14px;
+  border: 2px solid #bde1f2;
+  box-shadow: 0 6px 18px rgba(21, 108, 163, 0.15);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.item-galeria a:hover img {
+  transform: scale(1.08);
+  box-shadow: 0 10px 22px rgba(21, 108, 163, 0.17);
+}
+.descricao {
+  margin-top: 10px;
+  color: #313c44;
+  font-size: 1.08rem;
+  font-weight: bold;
+  text-align: center;
+}
+footer {
+  background: #39759b;
+  color: #fff;
+  text-align: center;
+  padding: 25px 0 12px 0;
+  margin-top: 60px;
+}
+footer h4 {
+  margin: 0;
+  font-weight: 400;
+}
+@media (max-width: 1240px) {
+  .galeria-certificados { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 880px) {
+  .galeria-certificados { grid-template-columns: 1fr; }
+  .bloco-certificados { padding: 34px 4vw; }
+}
+@media (max-width: 540px) {
+  header { padding: 36px 0 18px 0; }
+  .item-galeria img { max-width: 98vw; }
+  .titulo { font-size: 1.28rem; }
+  .container { padding: 8px 2px 8px 2px; }
+}

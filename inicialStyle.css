@@ -1,0 +1,163 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: url('imagens/inicial.JPG') no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+header {
+  padding: 60px;
+  text-align: center;
+  background: #9ED3E8;
+  color: #1D3557;
+}
+
+.navbar {
+  display: flex;
+  background-color: #457B9D;
+}
+
+.navbar a {
+  color: white;
+  padding: 14px 20px;
+  text-decoration: none;
+  text-align: center;
+}
+
+.navbar a:hover {
+  background-color: #A8DADC;
+  color: black;
+}
+
+.container.bloco-duplo {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 900px;
+  margin: 48px auto;
+  padding: 0;
+  background: none;
+}
+
+.inicio-card, .contacto-bloco {
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.13);
+  padding: 36px 28px;
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.inicio-card h1, .contacto-bloco h2 {
+  font-size: 2rem;
+  color: #1D3557;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.inicio-card p {
+  font-size: 1.1rem;
+  color: #313c44;
+  margin-bottom: 22px;
+}
+
+.btn-destaque, .contacto-bloco button {
+  display: inline-block;
+  background: #457B9D;
+  color: #fff;
+  font-size: 1.04rem;
+  font-weight: bold;
+  padding: 14px 34px;
+  border-radius: 8px;
+  text-decoration: none;
+  border: none;
+  transition: background 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 8px rgba(21,108,163,0.08);
+  margin-top: 18px;
+  cursor: pointer;
+}
+.btn-destaque:hover, .contacto-bloco button:hover {
+  background: #1D3557;
+}
+
+.form-contacto {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+  margin-top: 16px;
+}
+
+.form-contacto input, 
+.form-contacto textarea {
+  padding: 11px;
+  border-radius: 8px;
+  border: 1px solid #adcbe5;
+  font-size: 1em;
+  background: #f4f7fb;
+  resize: none;
+}
+
+.form-contacto textarea {
+  min-height: 90px;
+}
+
+footer {
+  width: 100vw;
+  padding: 20px 0 10px 0;
+  text-align: center;
+  background: #457B9D;
+  color: white;
+  font-weight: bold;
+  position: relative;
+  bottom: 0;
+}
+
+footer h4 {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .container.bloco-duplo { max-width: 98vw; }
+  .inicio-card, .contacto-bloco {
+    max-width: 98vw;
+    padding: 24px 10vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .container.bloco-duplo {
+    flex-direction: column;
+    gap: 24px;
+    align-items: center;
+    max-width: 100vw;
+  }
+  .inicio-card, .contacto-bloco {
+    max-width: 98vw;
+    padding: 14px 2vw;
+  }
+  .navbar { flex-direction: column; height: auto; }
+  header { padding: 36px 0 12px 0; }
+  .inicio-card h1, .contacto-bloco h2 { font-size: 1.48rem; }
+  .inicio-card p { font-size: 1rem; }
+}
+
+@media (max-width: 480px) {
+  .inicio-card, .contacto-bloco {
+    max-width: 99vw;
+    padding: 8px 1vw 4px 1vw;
+  }
+  .inicio-card h1, .contacto-bloco h2 { font-size: 1.13rem; }
+  .inicio-card p { font-size: 0.97rem; }
+}

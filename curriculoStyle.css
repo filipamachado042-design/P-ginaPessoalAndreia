@@ -1,0 +1,270 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+header {
+  padding: 60px;
+  text-align: center;
+  background: #9ED3E8;
+  color: #1D3557;
+}
+
+.navbar {
+  display: flex;
+  background-color: #457B9D;
+}
+
+.navbar a {
+  color: white;
+  padding: 14px 20px;
+  text-decoration: none;
+  text-align: center;
+}
+
+.navbar a:hover {
+  background-color: #A8DADC;
+  color: black;
+}
+
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  background: white;
+  padding: 10px;
+}
+
+.side {
+  flex: 30%;
+  background-color: #f1f1f1;
+  padding: 20px;
+  text-align: justify;
+}
+
+.main {
+  flex: 70%;
+  background-color: white;
+  padding: 20px;
+}
+
+.galeria-competencias {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  justify-items: center;
+}
+
+.galeria-competencias img {
+  width: 130px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  background: #fff;
+  margin: 0;
+  box-shadow: 0 0 6px #ddd;
+}
+
+.main img:not(.galeria-competencias img) {
+  border-radius: 8px;
+}
+
+.main p,
+.main h2,
+.main h5,
+.fakeimg {
+  margin-top: 15px;
+}
+
+.fakeimg {
+  background-color: #aaa;
+  padding: 20px;
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+footer {
+  padding: 20px;
+  text-align: center;
+  background: #457B9D;
+  color: white;
+  font-weight: bold;
+}
+
+.tecnologia-destaque {
+  font-style: italic;
+  font-weight: bold;
+  color: #000;
+  text-align: center;
+  margin: 0 auto;
+  max-width: 90%;
+  font-size: 1.2em;
+  line-height: 4;
+}
+
+.texto-localizacao {
+  text-align: justify;
+}
+
+.recuo-texto {
+  text-indent: 20px;
+  margin: 1px 0;
+  text-align: justify;
+}
+
+.info-pessoal {
+  margin-top: 20px;
+}
+
+.linha-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.icon-info {
+  width: 30px;
+  height: 30px;
+  margin-right: 12px;
+}
+
+.mapa-centro {
+  text-align: center;
+}
+
+.mapa-centro iframe {
+  display: inline-block;
+}
+
+.competencias-linguisticas {
+  max-width: 600px;
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 1em;
+  color: black;
+}
+
+.skill {
+  margin-bottom: 15px;
+}
+
+.skill h3 {
+  margin-bottom: 8px;
+  font-weight: normal;
+  color: #333;
+}
+
+.bar {
+  width: 100%;
+  background-color: #ddd;
+  border-radius: 10px;
+  height: 20px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background-color: #1D3557;
+  border-radius: 10px 0 0 10px;
+  transition: width 0.5s ease-in-out;
+}
+
+.atividades-trabalhos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 38px 0 30px 0;
+}
+
+.atividade-trabalho {
+  background: #f4f6f8;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #dde1e6;
+  padding: 18px 18px 14px 18px;
+  text-align: center;
+  max-width: 270px;
+  width: 100%;
+  margin-bottom: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+
+.atividade-trabalho img {
+  display: block;
+  width: 110px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 8px #ccddee;
+}
+
+.atividade-trabalho h3 {
+  color: #223553;
+  font-size: 1.04rem;
+  margin: 0 0 8px 0;
+  font-weight: bold;
+}
+
+.atividade-trabalho p {
+  font-size: 0.98rem;
+  color: #363b44;
+  margin: 0;
+}
+
+
+@media (max-width: 1024px) {
+  .galeria-competencias {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .container {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .container, .navbar {
+    flex-direction: column;
+  }
+  .main {
+    padding: 10px;
+  }
+  .galeria-competencias {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .galeria-competencias img {
+    width: 100px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .galeria-competencias {
+    grid-template-columns: 1fr;
+  }
+  .galeria-competencias img {
+    width: 80px;
+    height: 55px;
+  }
+  .inicio-card h1, .contacto-bloco h2 {
+    font-size: 1.13rem;
+  }
+  .inicio-card p, .contacto-bloco p {
+    font-size: 0.97rem;
+  }
+}
